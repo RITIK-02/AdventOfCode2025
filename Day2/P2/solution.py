@@ -2,24 +2,24 @@ with open("input.txt") as file:
     data = file.readlines()[0].split(',')
 # print(data)
 
-ans = []
+ans = set()
 
 for inp in data:
     lr = inp.split('-')[0]
     hr = inp.split('-')[1]
     # print(lr, hr)
-    if (len(lr)%2 != 0 and len(hr)%2 != 0):
-        continue
     for i in range(int(lr), int(hr) + 1):
         str_i = str(i)
         len_i = len(str_i)
-        if (len_i%2 != 0):
-            continue
-        for j in range(len_i//2, len_i):
-            if (str_i[j - len_i//2] != str_i[j]):
-                break
-        else:
-            # print(i)
-            ans.append(i)
-
+        s = ""
+        for ch in str_i:
+            s += ch
+            len_s = len(s)
+            if (int(len_i/len_s) != len_i/len_s or int(len_i/len_s) == 1):
+                continue
+            if (str_i == s*int(len_i/len_s)):
+                # print(str_i, "==", s*int(len_i/len_s))
+                ans.add(i)
+                
+# print(ans)
 print(sum(ans))
