@@ -1,15 +1,18 @@
-from functools import lru_cache
+from collections import deque
 
-with open("test.txt", "r") as f:
+with open("input.txt", "r") as f:
     inputs = [line.strip().split() for line in f.readlines()]
 
+# BFS with XOR bitwise masking
 ans = 0
 
 def preprocess_target(t):
+    mask = 0
     t = t[1:-1]
-    t = list(t)
-    t = [0 if x == "." else 1 for x in t]
-    return t
+    for i,c in enumerate(t):
+        if (c == '#'):
+            mask |= (1 << i)
+    return mask
 
 def preprocess_power(p):
     p = p[1:-1]
@@ -18,33 +21,41 @@ def preprocess_power(p):
     return p
 
 def preprocess_wiring(w):
-    wc = []
+    masks = []
     for i in range(len(w)):
-        wc.append(tuple(map(int, w[i][1:-1].split(","))))
-    return wc
+        bits = 0
+        for d in w[i][1:-1].split(","):
+            if d:
+                bits |= (1 << int(d))
+        masks.append(bits)
+    return masks
 
-@lru_cache(None)
-def dp(target, power, wiring, current):
-    if (target == current):
-        return 0
-    mc = 1e9
-    for w in wiring:
-        for i in range(len(w)):
-            current[w[i]] = not current[w[i]]
-        c = dp(target, power, wiring, current) + 1
-        mc = min(mc, c)
-        for i in range(len(w)):
-            current[w[i]] = not current[w[i]]
+def min_press(target, wiring):
+    start = 0
+    seen = {start}
+    dq = deque([(start, 0)])
 
-    return mc
+    while (len(dq) != 0):
+        state, count = dq.popleft()
+
+        if state == target:
+            return count 
+        
+        for w in wiring:
+            next_state = state ^ w
+
+            if (next_state not in seen):
+                seen.add(next_state)
+                dq.append((next_state, count+1))
+    
+    return float("inf")
 
 n = len(inputs)
 for i in range(n):
     target = preprocess_target(inputs[i][0])
     power = preprocess_power(inputs[i][-1])
     wiring = preprocess_wiring(inputs[i][1:-1])
-    init = [0]*len(target)
-    c = dp(target, power, wiring, init)
-    ans += c
+    ans += min_press(target, wiring)
+    
 
 print(ans)
